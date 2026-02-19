@@ -6,14 +6,29 @@
 
 <style>
 body {
-  text-align: center;
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-family: Arial, sans-serif;
-  margin-top: 80px;
-  background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  color: white;
+}
+
+.card {
+  text-align: center;
+  padding: 50px;
+  border-radius: 20px;
+  backdrop-filter: blur(15px);
+  background: rgba(255,255,255,0.08);
+  box-shadow: 0 0 40px rgba(0,0,0,0.6);
 }
 
 h1 {
   margin-bottom: 40px;
+  font-weight: 600;
+  letter-spacing: 2px;
 }
 
 .ball-container {
@@ -36,6 +51,7 @@ h1 {
   color: white;
   transform: scale(0);
   animation: pop 0.4s ease forwards;
+  box-shadow: 0 0 15px rgba(255,255,255,0.6);
 }
 
 @keyframes pop {
@@ -48,46 +64,55 @@ button {
   padding: 12px 30px;
   font-size: 16px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  background-color: #333;
+  background: linear-gradient(45deg, #ff512f, #dd2476);
   color: white;
+  font-weight: bold;
+  transition: 0.2s;
 }
 
 button:hover {
-  background-color: #555;
+  transform: scale(1.05);
 }
 </style>
 </head>
 
 <body>
 
-<h1>🎰 로또 번호 생성기</h1>
-
-<div class="ball-container" id="numbers"></div>
-
-<button onclick="generateLotto()">번호 생성</button>
+<div class="card">
+  <h1>🎰 LOTTO GENERATOR</h1>
+  <div class="ball-container" id="numbers"></div>
+  <button onclick="generateLotto()">번호 생성</button>
+</div>
 
 <script>
 function getColor(num) {
-  if (num <= 10) return "#fbc400";      // 노랑
-  if (num <= 20) return "#69c8f2";      // 파랑
-  if (num <= 30) return "#ff7272";      // 빨강
-  if (num <= 40) return "#aaa";         // 회색
-  return "#b0d840";                     // 초록
+  if (num <= 10) return "#fbc400";
+  if (num <= 20) return "#69c8f2";
+  if (num <= 30) return "#ff7272";
+  if (num <= 40) return "#aaa";
+  return "#b0d840";
+}
+
+// Fisher–Yates Shuffle (완전 균등 확률)
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }
 
 function generateLotto() {
-  const set = new Set();
-  while (set.size < 6) {
-    set.add(Math.floor(Math.random() * 45) + 1);
-  }
+  const numbers = Array.from({length: 45}, (_, i) => i + 1);
+  const shuffled = shuffle(numbers);
+  const selected = shuffled.slice(0, 6).sort((a,b) => a-b);
 
-  const numbers = Array.from(set).sort((a, b) => a - b);
   const container = document.getElementById("numbers");
   container.innerHTML = "";
 
-  numbers.forEach((num, index) => {
+  selected.forEach((num, index) => {
     const ball = document.createElement("div");
     ball.className = "ball";
     ball.innerText = num;
