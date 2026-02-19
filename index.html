@@ -77,6 +77,12 @@ button:active {
   transform: scale(0.97);
 }
 
+#installBtn {
+  margin-top: 12px;
+  background: linear-gradient(135deg,#10b981,#06b6d4);
+  display: none;
+}
+
 .footer {
   margin-top: 25px;
   font-size: 13px;
@@ -111,6 +117,7 @@ button:active {
   <h1>🎯 Lotto Generator</h1>
   <div class="numbers" id="numbers"></div>
   <button onclick="generate()">번호 다시 뽑기</button>
+  <button id="installBtn">📲 앱으로 설치하기</button>
   <div class="footer">45개 번호는 모두 동일 확률</div>
 </div>
 
@@ -143,10 +150,33 @@ function generate() {
 
 generate();
 
-/* PWA 등록 */
+/* ===== PWA 등록 ===== */
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
 }
+
+/* ===== 설치 버튼 기능 ===== */
+let deferredPrompt;
+const installBtn = document.getElementById("installBtn");
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.style.display = "block";
+});
+
+installBtn.addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+
+  if (outcome === "accepted") {
+    installBtn.style.display = "none";
+  }
+
+  deferredPrompt = null;
+});
 </script>
 
 </body>
