@@ -71,6 +71,7 @@ button {
   font-weight: 600;
   cursor: pointer;
   transition: 0.2s;
+  margin-top: 12px;
 }
 
 button:active {
@@ -78,7 +79,6 @@ button:active {
 }
 
 #installBtn {
-  margin-top: 12px;
   background: linear-gradient(135deg,#10b981,#06b6d4);
 }
 
@@ -94,7 +94,6 @@ button:active {
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* 번호 색상 구간 */
 .yellow { background: #facc15; color: #000; }
 .blue { background: #38bdf8; }
 .red { background: #ef4444; }
@@ -154,23 +153,45 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
 }
 
-/* ===== 설치 버튼 항상 표시 ===== */
+/* ===== 설치 감지 로직 ===== */
+
 let deferredPrompt;
 const installBtn = document.getElementById("installBtn");
 
+/* 이미 설치되어 있는지 확인 */
+function checkIfInstalled() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+  const isIOSStandalone = window.navigator.standalone === true;
+
+  if (isStandalone || isIOSStandalone) {
+    installBtn.textContent = "✅ 이미 설치되어 있음";
+    installBtn.disabled = true;
+  }
+}
+
+checkIfInstalled();
+
+/* 안드로이드 설치 이벤트 */
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   deferredPrompt = e;
 });
 
+/* 버튼 클릭 */
 installBtn.addEventListener("click", async () => {
 
+  /* 이미 설치된 경우 */
+  if (installBtn.disabled) return;
+
+  /* 안드로이드 */
   if (deferredPrompt) {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     deferredPrompt = null;
-  } else {
-    alert("📱 아이폰은 Safari → 공유버튼 → '홈 화면에 추가'를 눌러주세요.");
+  } 
+  /* 아이폰 */
+  else {
+    alert("📱 아이폰은 Safari → 공유 버튼 → '홈 화면에 추가'를 눌러주세요.");
   }
 
 });
