@@ -117,6 +117,11 @@ button:disabled{
   <button id="installBtn">📲 앱 설치하기</button>
 </div>
 
+<!-- 효과음 -->
+<audio id="tickSound">
+  <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg">
+</audio>
+
 <script>
 const numbersContainer = document.getElementById("numbers");
 const generateBtn = document.getElementById("generateBtn");
@@ -132,92 +137,84 @@ function getColorClass(num){
 
 async function generate(){
 
-  // 🔥 진행 시작 상태
   generateBtn.disabled = true;
   shareRow.style.display = "none";
-
   numbersContainer.innerHTML="";
 
-  const finalNumbers=new Set();
+  const finalNumbers = new Set();
   while(finalNumbers.size<6){
     finalNumbers.add(Math.floor(Math.random()*45)+1);
   }
-  const sorted=[...finalNumbers].sort((a,b)=>a-b);
+  const sorted = [...finalNumbers].sort((a,b)=>a-b);
 
+  const balls = [];
+
+  // 🔥 6개 먼저 생성
   for(let i=0;i<6;i++){
     const ball=document.createElement("div");
     ball.className="ball";
     numbersContainer.appendChild(ball);
-    await slotAnimation(ball,sorted[i],i*200);
+    balls.push(ball);
   }
 
-  // ✅ 완료 상태 복구
+  await realSlotAnimation(balls, sorted);
+
   generateBtn.disabled = false;
   shareRow.style.display = "flex";
 }
 
-function slotAnimation(element, finalNumber, delay){
+function realSlotAnimation(balls, finalNumbers){
   return new Promise(resolve=>{
-    setTimeout(()=>{
-      const tick = document.getElementById("tickSound");
 
-      let duration = 1400 + Math.random()*400;
-      let start = null;
+    const tick = document.getElementById("tickSound");
 
-      function animate(timestamp){
-        if(!start) start = timestamp;
-        const progress = timestamp - start;
-        const t = progress / duration;
+    let duration = 2200;
+    let start = null;
 
-        // easeOutCubic
-        const ease = 1 - Math.pow(1 - t, 3);
+    function animate(timestamp){
+      if(!start) start = timestamp;
+      const progress = timestamp - start;
+      const t = progress / duration;
 
-        // 🔥 점점 느려짐
-        const speed = 15 + ease * 250;
+      const ease = 1 - Math.pow(1 - t, 3);
+      const speed = 10 + ease * 200;
 
-        if(progress < duration){
+      if(progress < duration){
 
-          // 🔥 마지막 20% 구간 → 실제 숫자 근처 흔들림
-          if(t > 0.8){
-            let near = finalNumber + Math.floor(Math.random()*5 - 2);
-            if(near < 1) near = 1;
-            if(near > 45) near = 45;
-
-            element.textContent = near;
-            element.className = "ball " + getColorClass(near);
-          } else {
-            if(progress % speed < 16){
-              const temp = Math.floor(Math.random()*45)+1;
-              element.textContent = temp;
-              element.className = "ball " + getColorClass(temp);
-            }
+        balls.forEach(ball=>{
+          if(progress % speed < 16){
+            const temp = Math.floor(Math.random()*45)+1;
+            ball.textContent = temp;
+            ball.className = "ball " + getColorClass(temp);
           }
+        });
 
-          requestAnimationFrame(animate);
+        requestAnimationFrame(animate);
 
-        } else {
+      } else {
 
-          // 🔥 멈추기 직전 효과음
-          tick.currentTime = 0;
-          tick.play().catch(()=>{});
+        // 🔥 한 번에 확정
+        balls.forEach((ball,index)=>{
+          ball.textContent = finalNumbers[index];
+          ball.className = "ball " + getColorClass(finalNumbers[index]);
+          ball.style.transform = "scale(1.2)";
+        });
 
-          element.textContent = finalNumber;
-          element.className = "ball " + getColorClass(finalNumber);
+        tick.currentTime = 0;
+        tick.play().catch(()=>{});
 
-          // 살짝 튕김 효과
-          element.style.transform = "scale(1.2)";
-          setTimeout(()=>{
-            element.style.transform = "scale(1)";
-            resolve();
-          },180);
-        }
+        setTimeout(()=>{
+          balls.forEach(ball=>{
+            ball.style.transform = "scale(1)";
+          });
+          resolve();
+        },200);
       }
+    }
 
-      requestAnimationFrame(animate);
-    }, delay);
+    requestAnimationFrame(animate);
   });
 }
-
 
 /* 복사 */
 function copyNumbers(){
@@ -228,7 +225,7 @@ function copyNumbers(){
   alert("번호 복사 완료 ✅");
 }
 
-/* 기본 공유 */
+/* 공유 */
 function shareNumbers(){
   const nums=[...document.querySelectorAll(".ball")]
     .map(el=>el.textContent)
@@ -279,8 +276,6 @@ installBtn.addEventListener("click",async()=>{
 
 generate();
 </script>
-<audio id="tickSound">
-  <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg">
-</audio>
+
 </body>
 </html>
