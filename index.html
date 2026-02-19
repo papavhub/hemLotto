@@ -290,6 +290,42 @@ function saveImage(){
   link.href=canvas.toDataURL();
   link.click();
 }
+
+let deferredPrompt;
+const installBtn = document.querySelector(".install-btn");
+
+/* 안드로이드 설치 이벤트 감지 */
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+
+/* 버튼 클릭 */
+installBtn.addEventListener("click", async () => {
+
+  const ua = navigator.userAgent.toLowerCase();
+
+  // 📱 iPhone 처리
+  if (ua.includes("iphone") || ua.includes("ipad")) {
+    alert("📲 아이폰은 Safari에서 공유 버튼 → '홈 화면에 추가'를 선택하세요.");
+    return;
+  }
+
+  // 🤖 안드로이드
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const choiceResult = await deferredPrompt.userChoice;
+
+    if (choiceResult.outcome === "accepted") {
+      console.log("사용자가 설치를 수락했습니다");
+    }
+
+    deferredPrompt = null;
+  } else {
+    alert("이미 설치되었거나 설치를 지원하지 않는 환경입니다.");
+  }
+});
+
 </script>
 
 </body>
