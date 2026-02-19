@@ -184,16 +184,23 @@ function spinBall(ball, finalNumber, duration=1200){
     const interval=60;
 
     const spin=setInterval(()=>{
-      ball.textContent=Math.floor(Math.random()*45)+1;
-      elapsed+=interval;
+      const randomNum = Math.floor(Math.random()*45)+1;
 
-      if(elapsed>=duration){
+      ball.textContent = randomNum;
+      ball.style.background = getColor(randomNum); // 🔥 돌 때도 색 변경
+
+      elapsed += interval;
+
+      if(elapsed >= duration){
         clearInterval(spin);
-        ball.textContent=finalNumber;
+
+        ball.textContent = finalNumber;
+        ball.style.background = getColor(finalNumber); // 🔥 최종 색 적용
         ball.classList.add("final");
+
         resolve();
       }
-    },interval);
+    }, interval);
   });
 }
 
