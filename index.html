@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="manifest" href="manifest.json">
 <title>LOTTO GENERATOR</title>
 
 <style>
@@ -325,6 +326,14 @@ installBtn.addEventListener("click", async () => {
     alert("이미 설치되었거나 설치를 지원하지 않는 환경입니다.");
   }
 });
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("Service Worker 등록 완료"))
+        .catch(err => console.log("Service Worker 등록 실패:", err));
+    });
+  }
 
 </script>
 
