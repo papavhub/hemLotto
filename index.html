@@ -80,7 +80,6 @@ button:active {
 #installBtn {
   margin-top: 12px;
   background: linear-gradient(135deg,#10b981,#06b6d4);
-  display: none;
 }
 
 .footer {
@@ -155,27 +154,25 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
 }
 
-/* ===== 설치 버튼 기능 ===== */
+/* ===== 설치 버튼 항상 표시 ===== */
 let deferredPrompt;
 const installBtn = document.getElementById("installBtn");
 
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  installBtn.style.display = "block";
 });
 
 installBtn.addEventListener("click", async () => {
-  if (!deferredPrompt) return;
 
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-
-  if (outcome === "accepted") {
-    installBtn.style.display = "none";
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+  } else {
+    alert("📱 아이폰은 Safari → 공유버튼 → '홈 화면에 추가'를 눌러주세요.");
   }
 
-  deferredPrompt = null;
 });
 </script>
 
