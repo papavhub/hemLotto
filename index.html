@@ -3,37 +3,39 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>프리미엄 로또 생성기</title>
+<title>LOTTO GENERATOR</title>
 
 <style>
 body{
   margin:0;
-  background:linear-gradient(135deg,#0f172a,#1e293b);
+  background:radial-gradient(circle at 20% 20%, #1e293b, #0f172a 60%);
   color:white;
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   text-align:center;
+  min-height:100vh;
 }
 
 h1{
-  margin-top:50px;
+  margin-top:60px;
   font-weight:600;
-  letter-spacing:1px;
+  letter-spacing:2px;
 }
 
 /* ===== 토글 ===== */
 .toggle-wrap{
-  margin:30px auto;
+  margin:40px auto;
   display:flex;
   justify-content:center;
   align-items:center;
-  gap:12px;
+  gap:14px;
   font-size:14px;
+  opacity:0.85;
 }
 
 .switch{
   position:relative;
-  width:70px;
-  height:34px;
+  width:64px;
+  height:30px;
 }
 
 .switch input{
@@ -44,23 +46,22 @@ h1{
 
 .slider{
   position:absolute;
-  cursor:pointer;
   inset:0;
   background:#334155;
-  border-radius:34px;
-  transition:0.3s;
+  border-radius:30px;
+  transition:.3s;
 }
 
 .slider:before{
   content:"";
   position:absolute;
-  height:26px;
-  width:26px;
+  height:22px;
+  width:22px;
   left:4px;
   bottom:4px;
   background:white;
   border-radius:50%;
-  transition:0.3s;
+  transition:.3s;
 }
 
 input:checked + .slider{
@@ -68,56 +69,54 @@ input:checked + .slider{
 }
 
 input:checked + .slider:before{
-  transform:translateX(36px);
+  transform:translateX(34px);
 }
 
 /* ===== 번호 영역 ===== */
 .numbers{
-  margin-top:40px;
+  margin-top:60px;
   display:flex;
   justify-content:center;
-  gap:18px;
+  gap:22px;
   flex-wrap:wrap;
 }
 
 .ball{
-  width:70px;
-  height:70px;
+  width:72px;
+  height:72px;
   border-radius:50%;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:24px;
+  font-size:26px;
   font-weight:700;
   color:white;
-  opacity:0;
-  transform:scale(0.6);
+  opacity:1;
+  transform:scale(1);
+  transition:transform .2s ease;
 }
 
-/* 등장 애니메이션 */
-.show{
-  animation:pop 0.4s ease forwards;
+.ball.final{
+  animation:pop .35s ease;
 }
 
 @keyframes pop{
-  to{
-    opacity:1;
-    transform:scale(1);
-  }
+  0%{transform:scale(1.2);}
+  100%{transform:scale(1);}
 }
 
 /* 버튼 */
 button{
-  margin-top:50px;
-  padding:14px 40px;
+  margin-top:60px;
+  padding:14px 44px;
   border:none;
-  border-radius:30px;
+  border-radius:40px;
   font-size:16px;
   font-weight:600;
   cursor:pointer;
   background:linear-gradient(45deg,#6366f1,#8b5cf6);
   color:white;
-  transition:0.3s;
+  transition:.3s;
 }
 
 button:hover{
@@ -125,15 +124,15 @@ button:hover{
 }
 
 button:disabled{
-  opacity:0.4;
+  opacity:.4;
   cursor:not-allowed;
 }
 
 @media(max-width:480px){
   .ball{
-    width:58px;
-    height:58px;
-    font-size:20px;
+    width:60px;
+    height:60px;
+    font-size:22px;
   }
 }
 </style>
@@ -158,9 +157,9 @@ button:disabled{
 <button id="generateBtn">번호 생성</button>
 
 <script>
-const numbersContainer = document.getElementById("numbers");
-const generateBtn = document.getElementById("generateBtn");
-const modeToggle = document.getElementById("modeToggle");
+const numbersContainer=document.getElementById("numbers");
+const generateBtn=document.getElementById("generateBtn");
+const modeToggle=document.getElementById("modeToggle");
 
 function getColor(num){
   if(num<=10) return "#facc15";
@@ -178,19 +177,20 @@ function generateNumbers(){
   return [...set];
 }
 
-/* ===== 슬롯 애니메이션 (동일속도) ===== */
-function slotSpin(ball,finalNumber){
+/* ===== 랜덤 회전 함수 ===== */
+function spinBall(ball, finalNumber, duration=1200){
   return new Promise(resolve=>{
-    let count=0;
-    const duration=1200;
+    let elapsed=0;
     const interval=60;
 
     const spin=setInterval(()=>{
       ball.textContent=Math.floor(Math.random()*45)+1;
-      count+=interval;
-      if(count>=duration){
+      elapsed+=interval;
+
+      if(elapsed>=duration){
         clearInterval(spin);
         ball.textContent=finalNumber;
+        ball.classList.add("final");
         resolve();
       }
     },interval);
@@ -198,37 +198,36 @@ function slotSpin(ball,finalNumber){
 }
 
 /* ===== 하나씩 모드 ===== */
-async function revealSequential(sorted){
+async function sequentialMode(sorted){
   for(let i=0;i<6;i++){
     const ball=document.createElement("div");
     ball.className="ball";
     ball.style.background=getColor(sorted[i]);
     numbersContainer.appendChild(ball);
 
-    await slotSpin(ball,sorted[i]);
-    ball.classList.add("show");
+    await spinBall(ball, sorted[i], 1000);
   }
 }
 
 /* ===== 한번에 모드 ===== */
-async function revealAllAtOnce(sorted){
+async function allAtOnceMode(sorted){
   const balls=[];
 
   for(let i=0;i<6;i++){
     const ball=document.createElement("div");
-    ball.className="ball show";
+    ball.className="ball";
     ball.style.background=getColor(sorted[i]);
     numbersContainer.appendChild(ball);
     balls.push(ball);
   }
 
   await Promise.all(
-    balls.map((ball,i)=>slotSpin(ball,sorted[i]))
+    balls.map((ball,i)=>spinBall(ball, sorted[i], 1200))
   );
 }
 
-/* ===== 생성 ===== */
-generateBtn.addEventListener("click", async ()=>{
+/* ===== 생성 버튼 ===== */
+generateBtn.addEventListener("click", async()=>{
   generateBtn.disabled=true;
   numbersContainer.innerHTML="";
 
@@ -236,9 +235,9 @@ generateBtn.addEventListener("click", async ()=>{
   const sorted=[...numbers].sort((a,b)=>a-b);
 
   if(modeToggle.checked){
-    await revealAllAtOnce(sorted);
+    await allAtOnceMode(sorted);
   }else{
-    await revealSequential(sorted);
+    await sequentialMode(sorted);
   }
 
   generateBtn.disabled=false;
