@@ -40,6 +40,7 @@ h1{
   flex-wrap:wrap;
   gap:12px;
   margin-bottom:25px;
+  min-height:60px;
 }
 
 .ball{
@@ -52,6 +53,7 @@ h1{
   font-weight:bold;
   font-size:18px;
   box-shadow:0 6px 18px rgba(0,0,0,0.4);
+  transition:transform 0.2s;
 }
 
 button{
@@ -65,11 +67,19 @@ button{
   font-weight:600;
   cursor:pointer;
   margin-top:10px;
+  transition:0.2s;
 }
 
 button:active{transform:scale(0.97)}
 
-#installBtn{background:linear-gradient(135deg,#10b981,#06b6d4)}
+button:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
+#installBtn{
+  background:linear-gradient(135deg,#10b981,#06b6d4)
+}
 
 .yellow{background:#facc15;color:#000}
 .blue{background:#38bdf8}
@@ -91,15 +101,16 @@ button:active{transform:scale(0.97)}
 </head>
 <body>
 
-<div class="container" id="captureArea">
+<div class="container">
   <h1>🎯 Lotto Generator</h1>
+
   <div class="numbers" id="numbers"></div>
 
-  <button onclick="generate()">🎰 번호 뽑기</button>
+  <button id="generateBtn" onclick="generate()">🎰 번호 뽑기</button>
 
-  <div class="share-row">
+  <div class="share-row" id="shareRow">
     <button onclick="copyNumbers()">📋 복사</button>
-    <button onclick="shareKakao()">🟡 카카오 공유</button>
+    <button onclick="shareNumbers()">📤 공유</button>
     <button onclick="saveImage()">🖼 저장</button>
   </div>
 
@@ -108,6 +119,8 @@ button:active{transform:scale(0.97)}
 
 <script>
 const numbersContainer = document.getElementById("numbers");
+const generateBtn = document.getElementById("generateBtn");
+const shareRow = document.getElementById("shareRow");
 
 function getColorClass(num){
   if(num<=10) return "yellow";
@@ -118,7 +131,13 @@ function getColorClass(num){
 }
 
 async function generate(){
+
+  // 🔥 진행 시작 상태
+  generateBtn.disabled = true;
+  shareRow.style.display = "none";
+
   numbersContainer.innerHTML="";
+
   const finalNumbers=new Set();
   while(finalNumbers.size<6){
     finalNumbers.add(Math.floor(Math.random()*45)+1);
@@ -129,15 +148,17 @@ async function generate(){
     const ball=document.createElement("div");
     ball.className="ball";
     numbersContainer.appendChild(ball);
-
     await slotAnimation(ball,sorted[i],i*200);
   }
+
+  // ✅ 완료 상태 복구
+  generateBtn.disabled = false;
+  shareRow.style.display = "flex";
 }
 
 function slotAnimation(element,finalNumber,delay){
   return new Promise(resolve=>{
     setTimeout(()=>{
-      let speed=50;
       let count=0;
       const interval=setInterval(()=>{
         const temp=Math.floor(Math.random()*45)+1;
@@ -150,7 +171,7 @@ function slotAnimation(element,finalNumber,delay){
           element.className="ball "+getColorClass(finalNumber);
           resolve();
         }
-      },speed);
+      },50);
     },delay);
   });
 }
@@ -164,20 +185,27 @@ function copyNumbers(){
   alert("번호 복사 완료 ✅");
 }
 
-/* 카카오 공유 (링크 공유 방식) */
-function shareKakao(){
+/* 기본 공유 */
+function shareNumbers(){
   const nums=[...document.querySelectorAll(".ball")]
     .map(el=>el.textContent)
     .join(", ");
-  const text=encodeURIComponent("🎯 로또 번호: "+nums);
-  window.open("https://story.kakao.com/share?text="+text);
+
+  if(navigator.share){
+    navigator.share({
+      title:"로또 번호",
+      text:"🎯 로또 번호: "+nums
+    });
+  }else{
+    alert("이 브라우저는 공유 기능을 지원하지 않습니다.");
+  }
 }
 
-/* 이미지 저장 */
+/* 숫자 영역만 저장 */
 function saveImage(){
-  html2canvas(document.getElementById("captureArea")).then(canvas=>{
+  html2canvas(document.getElementById("numbers")).then(canvas=>{
     const link=document.createElement("a");
-    link.download="lotto.png";
+    link.download="lotto_numbers.png";
     link.href=canvas.toDataURL();
     link.click();
   });
