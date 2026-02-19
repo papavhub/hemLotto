@@ -7,7 +7,6 @@
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f172a" />
-
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
 <style>
@@ -29,9 +28,53 @@ body{
   width:100%;
 }
 
-h1{
-  font-size:28px;
-  margin-bottom:30px;
+h1{margin-bottom:20px}
+
+.mode-toggle{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  margin-bottom:20px;
+  font-size:14px;
+}
+
+.switch{
+  position:relative;
+  width:50px;
+  height:26px;
+}
+
+.switch input{display:none}
+
+.slider{
+  position:absolute;
+  cursor:pointer;
+  background:#64748b;
+  border-radius:34px;
+  width:100%;
+  height:100%;
+  transition:.3s;
+}
+
+.slider:before{
+  content:"";
+  position:absolute;
+  height:20px;
+  width:20px;
+  left:3px;
+  top:3px;
+  background:white;
+  border-radius:50%;
+  transition:.3s;
+}
+
+input:checked + .slider{
+  background:#6366f1;
+}
+
+input:checked + .slider:before{
+  transform:translateX(24px);
 }
 
 .numbers{
@@ -67,25 +110,9 @@ button{
   font-weight:600;
   cursor:pointer;
   margin-top:10px;
-  transition:0.2s;
 }
 
-button:active{transform:scale(0.97)}
-
-button:disabled{
-  opacity:0.5;
-  cursor:not-allowed;
-}
-
-#installBtn{
-  background:linear-gradient(135deg,#10b981,#06b6d4)
-}
-
-.yellow{background:#facc15;color:#000}
-.blue{background:#38bdf8}
-.red{background:#ef4444}
-.gray{background:#94a3b8;color:#000}
-.green{background:#22c55e}
+button:disabled{opacity:0.5;cursor:not-allowed}
 
 .share-row{
   display:flex;
@@ -97,35 +124,46 @@ button:disabled{
   flex:1;
   font-size:14px;
 }
+
+.yellow{background:#facc15;color:#000}
+.blue{background:#38bdf8}
+.red{background:#ef4444}
+.gray{background:#94a3b8;color:#000}
+.green{background:#22c55e}
 </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>🎯 Lotto Generator</h1>
 
-  <div class="numbers" id="numbers"></div>
+<h1>🎯 Lotto Generator</h1>
 
-  <button id="generateBtn" onclick="generate()">🎰 번호 뽑기</button>
-
-  <div class="share-row" id="shareRow">
-    <button onclick="copyNumbers()">📋 복사</button>
-    <button onclick="shareNumbers()">📤 공유</button>
-    <button onclick="saveImage()">🖼 저장</button>
-  </div>
-
-  <button id="installBtn">📲 앱 설치하기</button>
+<div class="mode-toggle">
+  <span>하나씩</span>
+  <label class="switch">
+    <input type="checkbox" id="modeSwitch">
+    <span class="slider"></span>
+  </label>
+  <span>한번에</span>
 </div>
 
-<!-- 효과음 -->
-<audio id="tickSound">
-  <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg">
-</audio>
+<div class="numbers" id="numbers"></div>
+
+<button id="generateBtn" onclick="generate()">🎰 번호 뽑기</button>
+
+<div class="share-row" id="shareRow">
+  <button onclick="copyNumbers()">📋 복사</button>
+  <button onclick="shareNumbers()">📤 공유</button>
+  <button onclick="saveImage()">🖼 저장</button>
+</div>
+
+</div>
 
 <script>
 const numbersContainer = document.getElementById("numbers");
 const generateBtn = document.getElementById("generateBtn");
 const shareRow = document.getElementById("shareRow");
+const modeSwitch = document.getElementById("modeSwitch");
 
 function getColorClass(num){
   if(num<=10) return "yellow";
@@ -137,76 +175,93 @@ function getColorClass(num){
 
 async function generate(){
 
-  generateBtn.disabled = true;
-  shareRow.style.display = "none";
+  generateBtn.disabled=true;
+  shareRow.style.display="none";
   numbersContainer.innerHTML="";
 
-  const finalNumbers = new Set();
-  while(finalNumbers.size<6){
-    finalNumbers.add(Math.floor(Math.random()*45)+1);
+  const nums=new Set();
+  while(nums.size<6){
+    nums.add(Math.floor(Math.random()*45)+1);
   }
-  const sorted = [...finalNumbers].sort((a,b)=>a-b);
+  const sorted=[...nums].sort((a,b)=>a-b);
 
-  const balls = [];
+  if(modeSwitch.checked){
+    await allAtOnceMode(sorted);
+  }else{
+    await oneByOneMode(sorted);
+  }
 
-  // 🔥 6개 먼저 생성
+  generateBtn.disabled=false;
+  shareRow.style.display="flex";
+}
+
+/* 하나씩 보기 */
+async function oneByOneMode(finalNumbers){
   for(let i=0;i<6;i++){
     const ball=document.createElement("div");
     ball.className="ball";
     numbersContainer.appendChild(ball);
-    balls.push(ball);
+
+    await singleSlot(ball, finalNumbers[i]);
   }
-
-  await realSlotAnimation(balls, sorted);
-
-  generateBtn.disabled = false;
-  shareRow.style.display = "flex";
 }
 
-function realSlotAnimation(balls, finalNumbers){
+function singleSlot(ball, finalNumber){
   return new Promise(resolve=>{
+    let count=0;
+    const interval=setInterval(()=>{
+      const temp=Math.floor(Math.random()*45)+1;
+      ball.textContent=temp;
+      ball.className="ball "+getColorClass(temp);
+      count++;
+      if(count>20){
+        clearInterval(interval);
+        ball.textContent=finalNumber;
+        ball.className="ball "+getColorClass(finalNumber);
+        resolve();
+      }
+    },50);
+  });
+}
 
-    const tick = document.getElementById("tickSound");
+/* 한번에 보기 (동일 속도, 부드럽게) */
+function allAtOnceMode(finalNumbers){
+  return new Promise(resolve=>{
+    const balls=[];
+    for(let i=0;i<6;i++){
+      const ball=document.createElement("div");
+      ball.className="ball";
+      numbersContainer.appendChild(ball);
+      balls.push(ball);
+    }
 
-    let duration = 2200;
-    let start = null;
+    let duration=2000;
+    let start=null;
 
     function animate(timestamp){
-      if(!start) start = timestamp;
-      const progress = timestamp - start;
-      const t = progress / duration;
+      if(!start) start=timestamp;
+      const progress=timestamp-start;
 
-      const ease = 1 - Math.pow(1 - t, 3);
-      const speed = 10 + ease * 200;
-
-      if(progress < duration){
+      if(progress<duration){
 
         balls.forEach(ball=>{
-          if(progress % speed < 16){
-            const temp = Math.floor(Math.random()*45)+1;
-            ball.textContent = temp;
-            ball.className = "ball " + getColorClass(temp);
-          }
+          const temp=Math.floor(Math.random()*45)+1;
+          ball.textContent=temp;
+          ball.className="ball "+getColorClass(temp);
         });
 
         requestAnimationFrame(animate);
 
-      } else {
+      }else{
 
-        // 🔥 한 번에 확정
         balls.forEach((ball,index)=>{
-          ball.textContent = finalNumbers[index];
-          ball.className = "ball " + getColorClass(finalNumbers[index]);
-          ball.style.transform = "scale(1.2)";
+          ball.textContent=finalNumbers[index];
+          ball.className="ball "+getColorClass(finalNumbers[index]);
+          ball.style.transform="scale(1.2)";
         });
 
-        tick.currentTime = 0;
-        tick.play().catch(()=>{});
-
         setTimeout(()=>{
-          balls.forEach(ball=>{
-            ball.style.transform = "scale(1)";
-          });
+          balls.forEach(ball=>ball.style.transform="scale(1)");
           resolve();
         },200);
       }
@@ -216,65 +271,32 @@ function realSlotAnimation(balls, finalNumbers){
   });
 }
 
-/* 복사 */
+/* 공유 */
 function copyNumbers(){
   const nums=[...document.querySelectorAll(".ball")]
-    .map(el=>el.textContent)
-    .join(", ");
+  .map(el=>el.textContent).join(", ");
   navigator.clipboard.writeText(nums);
   alert("번호 복사 완료 ✅");
 }
 
-/* 공유 */
 function shareNumbers(){
   const nums=[...document.querySelectorAll(".ball")]
-    .map(el=>el.textContent)
-    .join(", ");
-
+  .map(el=>el.textContent).join(", ");
   if(navigator.share){
-    navigator.share({
-      title:"로또 번호",
-      text:"🎯 로또 번호: "+nums
-    });
+    navigator.share({title:"로또 번호",text:"🎯 "+nums});
   }else{
-    alert("이 브라우저는 공유 기능을 지원하지 않습니다.");
+    alert("공유 기능 미지원");
   }
 }
 
-/* 숫자 영역만 저장 */
 function saveImage(){
   html2canvas(document.getElementById("numbers")).then(canvas=>{
     const link=document.createElement("a");
-    link.download="lotto_numbers.png";
+    link.download="lotto.png";
     link.href=canvas.toDataURL();
     link.click();
   });
 }
-
-/* PWA */
-if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("service-worker.js");
-}
-
-let deferredPrompt;
-const installBtn=document.getElementById("installBtn");
-
-window.addEventListener("beforeinstallprompt",(e)=>{
-  e.preventDefault();
-  deferredPrompt=e;
-});
-
-installBtn.addEventListener("click",async()=>{
-  if(deferredPrompt){
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt=null;
-  }else{
-    alert("📱 Safari → 공유 → 홈 화면에 추가");
-  }
-});
-
-generate();
 </script>
 
 </body>
