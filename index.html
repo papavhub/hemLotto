@@ -24,19 +24,23 @@ body {
   background: radial-gradient(circle at 20% 20%, #1e293b, #0f172a 70%);
   color: white;
   padding: 20px;
+  overflow: hidden;
 }
 
 .container {
   text-align: center;
   max-width: 420px;
   width: 100%;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeIn 0.8s ease forwards;
+  animation-delay: 1.2s;
 }
 
 h1 {
   font-size: 28px;
   margin-bottom: 30px;
   font-weight: 600;
-  letter-spacing: -1px;
 }
 
 .numbers {
@@ -88,35 +92,112 @@ button:active {
   opacity: 0.6;
 }
 
-@keyframes pop {
-  0% { transform: scale(0); opacity: 0; }
-  80% { transform: scale(1.15); }
-  100% { transform: scale(1); opacity: 1; }
-}
-
 .yellow { background: #facc15; color: #000; }
 .blue { background: #38bdf8; }
 .red { background: #ef4444; }
 .gray { background: #94a3b8; color:#000; }
 .green { background: #22c55e; }
 
-@media (max-width: 400px) {
-  .ball {
-    width: 50px;
-    height: 50px;
-    font-size: 16px;
+/* 스플래시 */
+.splash {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, #1e293b, #0f172a);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 32px;
+  font-weight: bold;
+  animation: splashOut 1s ease forwards;
+  animation-delay: 1s;
+}
+
+@keyframes splashOut {
+  to {
+    opacity: 0;
+    visibility: hidden;
   }
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pop {
+  0% { transform: scale(0); opacity: 0; }
+  80% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* 설치 성공 애니메이션 */
+.success {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #22c55e;
+  padding: 12px 20px;
+  border-radius: 20px;
+  animation: slideDown 0.5s ease, fadeOut 0.5s ease 2s forwards;
+}
+
+@keyframes slideDown {
+  from { transform: translate(-50%, -40px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; }
+}
+
+/* iOS 모달 */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  visibility: hidden;
+}
+
+.modal-content {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 16px;
+  text-align: center;
+  max-width: 300px;
+}
+
+.modal.show {
+  visibility: visible;
 }
 </style>
 </head>
 <body>
 
+<div class="splash">🎯 Lotto</div>
+
 <div class="container">
-  <h1>🎯 Lotto Generator</h1>
+  <h1>Lotto Generator</h1>
   <div class="numbers" id="numbers"></div>
   <button onclick="generate()">번호 다시 뽑기</button>
   <button id="installBtn">📲 앱으로 설치하기</button>
   <div class="footer">45개 번호는 모두 동일 확률</div>
+</div>
+
+<!-- iOS 안내 모달 -->
+<div class="modal" id="iosModal">
+  <div class="modal-content">
+    <p>📱 Safari에서<br><br>
+    공유 버튼 →<br>
+    "홈 화면에 추가"</p>
+    <br>
+    <button onclick="closeModal()">확인</button>
+  </div>
 </div>
 
 <script>
@@ -148,53 +229,55 @@ function generate() {
 
 generate();
 
-/* ===== PWA 등록 ===== */
+/* PWA 등록 */
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
 }
 
-/* ===== 설치 감지 로직 ===== */
+const installBtn = document.getElementById("installBtn");
+const iosModal = document.getElementById("iosModal");
 
 let deferredPrompt;
-const installBtn = document.getElementById("installBtn");
 
-/* 이미 설치되어 있는지 확인 */
-function checkIfInstalled() {
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-  const isIOSStandalone = window.navigator.standalone === true;
+/* 설치 여부 확인 → 설치되어 있으면 버튼 제거 */
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+const isIOSStandalone = window.navigator.standalone === true;
 
-  if (isStandalone || isIOSStandalone) {
-    installBtn.textContent = "✅ 이미 설치되어 있음";
-    installBtn.disabled = true;
-  }
+if (isStandalone || isIOSStandalone) {
+  installBtn.remove();
 }
 
-checkIfInstalled();
-
-/* 안드로이드 설치 이벤트 */
+/* 안드로이드 이벤트 */
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   deferredPrompt = e;
 });
 
-/* 버튼 클릭 */
-installBtn.addEventListener("click", async () => {
+/* 클릭 */
+installBtn?.addEventListener("click", async () => {
 
-  /* 이미 설치된 경우 */
-  if (installBtn.disabled) return;
-
-  /* 안드로이드 */
   if (deferredPrompt) {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
+
+    if (outcome === "accepted") {
+      const success = document.createElement("div");
+      success.className = "success";
+      success.textContent = "🎉 설치 완료!";
+      document.body.appendChild(success);
+      installBtn.remove();
+    }
+
     deferredPrompt = null;
-  } 
-  /* 아이폰 */
-  else {
-    alert("📱 아이폰은 Safari → 공유 버튼 → '홈 화면에 추가'를 눌러주세요.");
+  } else {
+    iosModal.classList.add("show");
   }
 
 });
+
+function closeModal() {
+  iosModal.classList.remove("show");
+}
 </script>
 
 </body>
