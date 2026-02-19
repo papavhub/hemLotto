@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>LOTTO GENERATOR</title>
 
@@ -21,7 +21,7 @@ h1{
   letter-spacing:2px;
 }
 
-/* ===== 토글 ===== */
+/* 토글 */
 .toggle-wrap{
   margin:40px auto;
   display:flex;
@@ -29,7 +29,7 @@ h1{
   align-items:center;
   gap:14px;
   font-size:14px;
-  opacity:0.85;
+  opacity:.9;
 }
 
 .switch{
@@ -37,13 +37,7 @@ h1{
   width:64px;
   height:30px;
 }
-
-.switch input{
-  opacity:0;
-  width:0;
-  height:0;
-}
-
+.switch input{opacity:0;width:0;height:0;}
 .slider{
   position:absolute;
   inset:0;
@@ -51,7 +45,6 @@ h1{
   border-radius:30px;
   transition:.3s;
 }
-
 .slider:before{
   content:"";
   position:absolute;
@@ -63,16 +56,10 @@ h1{
   border-radius:50%;
   transition:.3s;
 }
+input:checked + .slider{background:#6366f1;}
+input:checked + .slider:before{transform:translateX(34px);}
 
-input:checked + .slider{
-  background:#6366f1;
-}
-
-input:checked + .slider:before{
-  transform:translateX(34px);
-}
-
-/* ===== 번호 영역 ===== */
+/* 번호 */
 .numbers{
   margin-top:60px;
   display:flex;
@@ -80,7 +67,6 @@ input:checked + .slider:before{
   gap:22px;
   flex-wrap:wrap;
 }
-
 .ball{
   width:72px;
   height:72px;
@@ -91,22 +77,17 @@ input:checked + .slider:before{
   font-size:26px;
   font-weight:700;
   color:white;
-  opacity:1;
-  transform:scale(1);
-  transition:transform .2s ease;
 }
-
 .ball.final{
   animation:pop .35s ease;
 }
-
 @keyframes pop{
   0%{transform:scale(1.2);}
   100%{transform:scale(1);}
 }
 
 /* 버튼 */
-button{
+.main-btn{
   margin-top:60px;
   padding:14px 44px;
   border:none;
@@ -116,24 +97,39 @@ button{
   cursor:pointer;
   background:linear-gradient(45deg,#6366f1,#8b5cf6);
   color:white;
-  transition:.3s;
+}
+.main-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.action-row{
+  margin-top:30px;
+  display:none;
+  justify-content:center;
+  gap:12px;
+  flex-wrap:wrap;
 }
 
-button:hover{
-  transform:scale(1.05);
+.action-row button{
+  padding:10px 18px;
+  border:none;
+  border-radius:20px;
+  font-size:14px;
+  cursor:pointer;
+  background:#334155;
+  color:white;
 }
 
-button:disabled{
-  opacity:.4;
-  cursor:not-allowed;
+.install-btn{
+  margin-top:20px;
+  background:#111827;
+  padding:10px 22px;
+  border-radius:30px;
+  font-size:14px;
+  border:1px solid #374151;
+  cursor:pointer;
 }
 
 @media(max-width:480px){
-  .ball{
-    width:60px;
-    height:60px;
-    font-size:22px;
-  }
+  .ball{width:60px;height:60px;font-size:22px;}
 }
 </style>
 </head>
@@ -143,23 +139,32 @@ button:disabled{
 
 <div class="toggle-wrap">
   <span>하나씩 보기</span>
-
   <label class="switch">
     <input type="checkbox" id="modeToggle">
     <span class="slider"></span>
   </label>
-
   <span>한번에 보기</span>
 </div>
 
 <div class="numbers" id="numbers"></div>
 
-<button id="generateBtn">번호 생성</button>
+<button class="main-btn" id="generateBtn">번호 생성</button>
+
+<div class="action-row" id="actionRow">
+  <button onclick="copyNumbers()">번호 복사</button>
+  <button onclick="shareNumbers()">공유</button>
+  <button onclick="saveImage()">사진 저장</button>
+</div>
+
+<button class="install-btn">앱 설치</button>
 
 <script>
 const numbersContainer=document.getElementById("numbers");
 const generateBtn=document.getElementById("generateBtn");
 const modeToggle=document.getElementById("modeToggle");
+const actionRow=document.getElementById("actionRow");
+
+let currentNumbers=[];
 
 function getColor(num){
   if(num<=10) return "#facc15";
@@ -177,69 +182,58 @@ function generateNumbers(){
   return [...set];
 }
 
-/* ===== 랜덤 회전 함수 ===== */
 function spinBall(ball, finalNumber, duration=1200){
   return new Promise(resolve=>{
     let elapsed=0;
     const interval=60;
 
     const spin=setInterval(()=>{
-      const randomNum = Math.floor(Math.random()*45)+1;
+      const randomNum=Math.floor(Math.random()*45)+1;
+      ball.textContent=randomNum;
+      ball.style.background=getColor(randomNum);
+      elapsed+=interval;
 
-      ball.textContent = randomNum;
-      ball.style.background = getColor(randomNum); // 🔥 돌 때도 색 변경
-
-      elapsed += interval;
-
-      if(elapsed >= duration){
+      if(elapsed>=duration){
         clearInterval(spin);
-
-        ball.textContent = finalNumber;
-        ball.style.background = getColor(finalNumber); // 🔥 최종 색 적용
+        ball.textContent=finalNumber;
+        ball.style.background=getColor(finalNumber);
         ball.classList.add("final");
-
         resolve();
       }
-    }, interval);
+    },interval);
   });
 }
 
-/* ===== 하나씩 모드 ===== */
 async function sequentialMode(sorted){
   for(let i=0;i<6;i++){
     const ball=document.createElement("div");
     ball.className="ball";
-    ball.style.background=getColor(sorted[i]);
     numbersContainer.appendChild(ball);
-
-    await spinBall(ball, sorted[i], 1000);
+    await spinBall(ball,sorted[i],1000);
   }
 }
 
-/* ===== 한번에 모드 ===== */
 async function allAtOnceMode(sorted){
   const balls=[];
-
   for(let i=0;i<6;i++){
     const ball=document.createElement("div");
     ball.className="ball";
-    ball.style.background=getColor(sorted[i]);
     numbersContainer.appendChild(ball);
     balls.push(ball);
   }
-
   await Promise.all(
-    balls.map((ball,i)=>spinBall(ball, sorted[i], 1200))
+    balls.map((ball,i)=>spinBall(ball,sorted[i],1200))
   );
 }
 
-/* ===== 생성 버튼 ===== */
 generateBtn.addEventListener("click", async()=>{
   generateBtn.disabled=true;
+  actionRow.style.display="none";
   numbersContainer.innerHTML="";
 
   const numbers=generateNumbers();
   const sorted=[...numbers].sort((a,b)=>a-b);
+  currentNumbers=sorted;
 
   if(modeToggle.checked){
     await allAtOnceMode(sorted);
@@ -247,8 +241,55 @@ generateBtn.addEventListener("click", async()=>{
     await sequentialMode(sorted);
   }
 
+  actionRow.style.display="flex";
   generateBtn.disabled=false;
 });
+
+/* 복사 */
+function copyNumbers(){
+  navigator.clipboard.writeText(currentNumbers.join(", "));
+  alert("복사 완료!");
+}
+
+/* 공유 */
+function shareNumbers(){
+  if(navigator.share){
+    navigator.share({
+      title:"로또 번호",
+      text:currentNumbers.join(", ")
+    });
+  }else{
+    alert("이 브라우저는 공유를 지원하지 않습니다.");
+  }
+}
+
+/* 이미지 저장 (숫자 6개만) */
+function saveImage(){
+  const canvas=document.createElement("canvas");
+  canvas.width=600;
+  canvas.height=200;
+  const ctx=canvas.getContext("2d");
+
+  ctx.fillStyle="#0f172a";
+  ctx.fillRect(0,0,600,200);
+
+  currentNumbers.forEach((num,i)=>{
+    ctx.beginPath();
+    ctx.arc(80+i*90,100,35,0,Math.PI*2);
+    ctx.fillStyle=getColor(num);
+    ctx.fill();
+    ctx.fillStyle="white";
+    ctx.font="20px sans-serif";
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    ctx.fillText(num,80+i*90,100);
+  });
+
+  const link=document.createElement("a");
+  link.download="lotto.png";
+  link.href=canvas.toDataURL();
+  link.click();
+}
 </script>
 
 </body>
