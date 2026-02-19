@@ -8,201 +8,205 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f172a" />
 
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+
+body{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:radial-gradient(circle at 20% 20%, #1e293b, #0f172a 70%);
+  color:white;
+  padding:20px;
 }
 
-body {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: radial-gradient(circle at 20% 20%, #1e293b, #0f172a 70%);
-  color: white;
-  padding: 20px;
+.container{
+  text-align:center;
+  max-width:420px;
+  width:100%;
 }
 
-.container {
-  text-align: center;
-  max-width: 420px;
-  width: 100%;
+h1{
+  font-size:28px;
+  margin-bottom:30px;
 }
 
-h1 {
-  font-size: 28px;
-  margin-bottom: 30px;
-  font-weight: 600;
+.numbers{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-bottom:25px;
 }
 
-.numbers {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 30px;
+.ball{
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-weight:bold;
+  font-size:18px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.4);
 }
 
-.ball {
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  font-size: 18px;
-  animation: pop 0.4s ease;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  color:white;
+  font-size:16px;
+  font-weight:600;
+  cursor:pointer;
+  margin-top:10px;
 }
 
-button {
-  width: 100%;
-  padding: 14px;
-  border: none;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-  margin-top: 12px;
+button:active{transform:scale(0.97)}
+
+#installBtn{background:linear-gradient(135deg,#10b981,#06b6d4)}
+
+.yellow{background:#facc15;color:#000}
+.blue{background:#38bdf8}
+.red{background:#ef4444}
+.gray{background:#94a3b8;color:#000}
+.green{background:#22c55e}
+
+.share-row{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
 }
 
-button:active {
-  transform: scale(0.97);
-}
-
-#installBtn {
-  background: linear-gradient(135deg,#10b981,#06b6d4);
-}
-
-.footer {
-  margin-top: 25px;
-  font-size: 13px;
-  opacity: 0.6;
-}
-
-.yellow { background: #facc15; color: #000; }
-.blue { background: #38bdf8; }
-.red { background: #ef4444; }
-.gray { background: #94a3b8; color:#000; }
-.green { background: #22c55e; }
-
-@keyframes pop {
-  0% { transform: scale(0); opacity: 0; }
-  80% { transform: scale(1.15); }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-/* iOS 모달 */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  display: none;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-content {
-  background: #1e293b;
-  padding: 20px;
-  border-radius: 16px;
-  text-align: center;
-  max-width: 300px;
-}
-
-.modal.show {
-  display: flex;
+.share-row button{
+  flex:1;
+  font-size:14px;
 }
 </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="captureArea">
   <h1>🎯 Lotto Generator</h1>
   <div class="numbers" id="numbers"></div>
-  <button onclick="generate()">번호 다시 뽑기</button>
-  <button id="installBtn">📲 앱 설치하기</button>
-  <div class="footer">45개 번호는 모두 동일 확률</div>
-</div>
 
-<!-- iOS 안내 모달 -->
-<div class="modal" id="iosModal">
-  <div class="modal-content">
-    <p>📱 Safari에서<br><br>
-    공유 버튼 →<br>
-    "홈 화면에 추가"</p>
-    <br>
-    <button onclick="closeModal()">확인</button>
+  <button onclick="generate()">🎰 번호 뽑기</button>
+
+  <div class="share-row">
+    <button onclick="copyNumbers()">📋 복사</button>
+    <button onclick="shareKakao()">🟡 카카오 공유</button>
+    <button onclick="saveImage()">🖼 저장</button>
   </div>
+
+  <button id="installBtn">📲 앱 설치하기</button>
 </div>
 
 <script>
-function getColorClass(num) {
-  if (num <= 10) return "yellow";
-  if (num <= 20) return "blue";
-  if (num <= 30) return "red";
-  if (num <= 40) return "gray";
+const numbersContainer = document.getElementById("numbers");
+
+function getColorClass(num){
+  if(num<=10) return "yellow";
+  if(num<=20) return "blue";
+  if(num<=30) return "red";
+  if(num<=40) return "gray";
   return "green";
 }
 
-function generate() {
-  const numbers = new Set();
-  while (numbers.size < 6) {
-    numbers.add(Math.floor(Math.random() * 45) + 1);
+async function generate(){
+  numbersContainer.innerHTML="";
+  const finalNumbers=new Set();
+  while(finalNumbers.size<6){
+    finalNumbers.add(Math.floor(Math.random()*45)+1);
   }
+  const sorted=[...finalNumbers].sort((a,b)=>a-b);
 
-  const sorted = [...numbers].sort((a,b)=>a-b);
-  const container = document.getElementById("numbers");
-  container.innerHTML = "";
+  for(let i=0;i<6;i++){
+    const ball=document.createElement("div");
+    ball.className="ball";
+    numbersContainer.appendChild(ball);
 
-  sorted.forEach(num => {
-    const ball = document.createElement("div");
-    ball.className = "ball " + getColorClass(num);
-    ball.textContent = num;
-    container.appendChild(ball);
+    await slotAnimation(ball,sorted[i],i*200);
+  }
+}
+
+function slotAnimation(element,finalNumber,delay){
+  return new Promise(resolve=>{
+    setTimeout(()=>{
+      let speed=50;
+      let count=0;
+      const interval=setInterval(()=>{
+        const temp=Math.floor(Math.random()*45)+1;
+        element.textContent=temp;
+        element.className="ball "+getColorClass(temp);
+        count++;
+        if(count>15){
+          clearInterval(interval);
+          element.textContent=finalNumber;
+          element.className="ball "+getColorClass(finalNumber);
+          resolve();
+        }
+      },speed);
+    },delay);
   });
 }
 
-generate();
+/* 복사 */
+function copyNumbers(){
+  const nums=[...document.querySelectorAll(".ball")]
+    .map(el=>el.textContent)
+    .join(", ");
+  navigator.clipboard.writeText(nums);
+  alert("번호 복사 완료 ✅");
+}
 
-/* PWA 등록 */
-if ("serviceWorker" in navigator) {
+/* 카카오 공유 (링크 공유 방식) */
+function shareKakao(){
+  const nums=[...document.querySelectorAll(".ball")]
+    .map(el=>el.textContent)
+    .join(", ");
+  const text=encodeURIComponent("🎯 로또 번호: "+nums);
+  window.open("https://story.kakao.com/share?text="+text);
+}
+
+/* 이미지 저장 */
+function saveImage(){
+  html2canvas(document.getElementById("captureArea")).then(canvas=>{
+    const link=document.createElement("a");
+    link.download="lotto.png";
+    link.href=canvas.toDataURL();
+    link.click();
+  });
+}
+
+/* PWA */
+if("serviceWorker" in navigator){
   navigator.serviceWorker.register("service-worker.js");
 }
 
 let deferredPrompt;
-const installBtn = document.getElementById("installBtn");
-const iosModal = document.getElementById("iosModal");
+const installBtn=document.getElementById("installBtn");
 
-/* 안드로이드 설치 이벤트 */
-window.addEventListener("beforeinstallprompt", (e) => {
+window.addEventListener("beforeinstallprompt",(e)=>{
   e.preventDefault();
-  deferredPrompt = e;
+  deferredPrompt=e;
 });
 
-/* 클릭 */
-installBtn.addEventListener("click", async () => {
-
-  if (deferredPrompt) {
+installBtn.addEventListener("click",async()=>{
+  if(deferredPrompt){
     deferredPrompt.prompt();
     await deferredPrompt.userChoice;
-    deferredPrompt = null;
-  } else {
-    iosModal.classList.add("show");
+    deferredPrompt=null;
+  }else{
+    alert("📱 Safari → 공유 → 홈 화면에 추가");
   }
-
 });
 
-function closeModal() {
-  iosModal.classList.remove("show");
-}
+generate();
 </script>
 
 </body>
