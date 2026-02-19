@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>로또 번호 생성기</title>
+<title>Lotto</title>
 
 <style>
 * { box-sizing: border-box; }
@@ -14,79 +14,74 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  background: #0b0f19;
+  color: #e5e7eb;
   padding: 20px;
-
-  /* 🔥 새 배경 */
-  background:
-    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.08), transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(0,150,255,0.15), transparent 50%),
-    linear-gradient(160deg, #0f172a, #020617);
 }
 
 .card {
   width: 100%;
   max-width: 420px;
-  text-align: center;
-  padding: 35px 25px;
-  border-radius: 24px;
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(25px);
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 30px 60px rgba(0,0,0,0.7);
+  padding: 40px 30px;
+  border-radius: 20px;
+  background: #111827;
+  border: 1px solid #1f2937;
 }
 
 h1 {
-  margin-bottom: 30px;
-  font-size: 22px;
+  margin: 0 0 35px 0;
+  font-size: 18px;
+  font-weight: 500;
   letter-spacing: 1px;
+  color: #9ca3af;
 }
 
 .ball-container {
   display: flex;
   justify-content: center;
   gap: 12px;
-  margin-bottom: 35px;
+  margin-bottom: 40px;
   flex-wrap: wrap;
 }
 
 .ball {
-  width: 52px;
-  height: 52px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  font-weight: bold;
-  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
   transform: scale(0);
-  animation: pop 0.4s ease forwards;
-  box-shadow: 0 0 20px rgba(255,255,255,0.25);
+  animation: fadeIn 0.35s ease forwards;
 }
 
-@keyframes pop {
-  0% { transform: scale(0); opacity: 0; }
-  70% { transform: scale(1.15); }
-  100% { transform: scale(1); opacity: 1; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 button {
   width: 100%;
   padding: 14px;
-  font-size: 16px;
-  border: none;
-  border-radius: 14px;
+  font-size: 14px;
+  border-radius: 10px;
+  border: 1px solid #374151;
+  background: #1f2937;
+  color: #e5e7eb;
   cursor: pointer;
-  background: linear-gradient(45deg, #6366f1, #8b5cf6);
-  color: white;
-  font-weight: bold;
-  transition: 0.2s;
+  transition: background 0.2s ease;
+}
+
+button:hover {
+  background: #273449;
 }
 
 button:active {
-  transform: scale(0.97);
+  background: #334155;
 }
 </style>
 </head>
@@ -94,18 +89,18 @@ button:active {
 <body>
 
 <div class="card">
-  <h1>🎰 LOTTO GENERATOR</h1>
+  <h1>LOTTO GENERATOR</h1>
   <div class="ball-container" id="numbers"></div>
-  <button onclick="generateLotto()">번호 생성</button>
+  <button onclick="generateLotto()">Generate</button>
 </div>
 
 <script>
 function getColor(num) {
-  if (num <= 10) return "#fbc400";
-  if (num <= 20) return "#3b82f6";
-  if (num <= 30) return "#ef4444";
-  if (num <= 40) return "#9ca3af";
-  return "#22c55e";
+  if (num <= 10) return "#facc15";
+  if (num <= 20) return "#60a5fa";
+  if (num <= 30) return "#f87171";
+  if (num <= 40) return "#d1d5db";
+  return "#4ade80";
 }
 
 function shuffle(array) {
@@ -129,7 +124,7 @@ function generateLotto() {
     ball.className = "ball";
     ball.innerText = num;
     ball.style.backgroundColor = getColor(num);
-    ball.style.animationDelay = `${index * 0.1}s`;
+    ball.style.animationDelay = `${index * 0.05}s`;
     container.appendChild(ball);
   });
 }
