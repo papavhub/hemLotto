@@ -156,25 +156,68 @@ async function generate(){
   shareRow.style.display = "flex";
 }
 
-function slotAnimation(element,finalNumber,delay){
+function slotAnimation(element, finalNumber, delay){
   return new Promise(resolve=>{
     setTimeout(()=>{
-      let count=0;
-      const interval=setInterval(()=>{
-        const temp=Math.floor(Math.random()*45)+1;
-        element.textContent=temp;
-        element.className="ball "+getColorClass(temp);
-        count++;
-        if(count>15){
-          clearInterval(interval);
-          element.textContent=finalNumber;
-          element.className="ball "+getColorClass(finalNumber);
-          resolve();
+      const tick = document.getElementById("tickSound");
+
+      let duration = 1400 + Math.random()*400;
+      let start = null;
+
+      function animate(timestamp){
+        if(!start) start = timestamp;
+        const progress = timestamp - start;
+        const t = progress / duration;
+
+        // easeOutCubic
+        const ease = 1 - Math.pow(1 - t, 3);
+
+        // 🔥 점점 느려짐
+        const speed = 15 + ease * 250;
+
+        if(progress < duration){
+
+          // 🔥 마지막 20% 구간 → 실제 숫자 근처 흔들림
+          if(t > 0.8){
+            let near = finalNumber + Math.floor(Math.random()*5 - 2);
+            if(near < 1) near = 1;
+            if(near > 45) near = 45;
+
+            element.textContent = near;
+            element.className = "ball " + getColorClass(near);
+          } else {
+            if(progress % speed < 16){
+              const temp = Math.floor(Math.random()*45)+1;
+              element.textContent = temp;
+              element.className = "ball " + getColorClass(temp);
+            }
+          }
+
+          requestAnimationFrame(animate);
+
+        } else {
+
+          // 🔥 멈추기 직전 효과음
+          tick.currentTime = 0;
+          tick.play().catch(()=>{});
+
+          element.textContent = finalNumber;
+          element.className = "ball " + getColorClass(finalNumber);
+
+          // 살짝 튕김 효과
+          element.style.transform = "scale(1.2)";
+          setTimeout(()=>{
+            element.style.transform = "scale(1)";
+            resolve();
+          },180);
         }
-      },50);
-    },delay);
+      }
+
+      requestAnimationFrame(animate);
+    }, delay);
   });
 }
+
 
 /* 복사 */
 function copyNumbers(){
@@ -236,6 +279,8 @@ installBtn.addEventListener("click",async()=>{
 
 generate();
 </script>
-
+<audio id="tickSound">
+  <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg">
+</audio>
 </body>
 </html>
