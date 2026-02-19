@@ -1,85 +1,104 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>로또 번호 생성기</title>
-  <style>
-    body {
-      text-align: center;
-      font-family: Arial, sans-serif;
-      margin-top: 80px;
-      background-color: #f5f5f5;
-    }
+<meta charset="UTF-8">
+<title>로또 번호 생성기</title>
 
-    h1 {
-      margin-bottom: 40px;
-    }
+<style>
+body {
+  text-align: center;
+  font-family: Arial, sans-serif;
+  margin-top: 80px;
+  background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+}
 
-    .ball-container {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin-bottom: 40px;
-    }
+h1 {
+  margin-bottom: 40px;
+}
 
-    .ball {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background-color: #ffcc00;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      font-weight: bold;
-      box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-    }
+.ball-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
 
-    button {
-      padding: 12px 25px;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      background-color: #4CAF50;
-      color: white;
-    }
+.ball {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+  transform: scale(0);
+  animation: pop 0.4s ease forwards;
+}
 
-    button:hover {
-      background-color: #45a049;
-    }
-  </style>
+@keyframes pop {
+  0% { transform: scale(0); opacity: 0; }
+  70% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+button {
+  padding: 12px 30px;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #333;
+  color: white;
+}
+
+button:hover {
+  background-color: #555;
+}
+</style>
 </head>
+
 <body>
 
-  <h1>🎰 로또 번호 생성기</h1>
+<h1>🎰 로또 번호 생성기</h1>
 
-  <div class="ball-container" id="numbers"></div>
+<div class="ball-container" id="numbers"></div>
 
-  <button onclick="generateLotto()">번호 생성</button>
+<button onclick="generateLotto()">번호 생성</button>
 
-  <script>
-    function generateLotto() {
-      const set = new Set();
-      while (set.size <= 6) {
-        set.add(Math.floor(Math.random() * 45) + 1);
-      }
+<script>
+function getColor(num) {
+  if (num <= 10) return "#fbc400";      // 노랑
+  if (num <= 20) return "#69c8f2";      // 파랑
+  if (num <= 30) return "#ff7272";      // 빨강
+  if (num <= 40) return "#aaa";         // 회색
+  return "#b0d840";                     // 초록
+}
 
-      const numbers = Array.from(set).sort((a, b) => a - b);
-      const container = document.getElementById("numbers");
-      container.innerHTML = "";
+function generateLotto() {
+  const set = new Set();
+  while (set.size < 6) {
+    set.add(Math.floor(Math.random() * 45) + 1);
+  }
 
-      numbers.forEach(num => {
-        const ball = document.createElement("div");
-        ball.className = "ball";
-        ball.innerText = num;
-        container.appendChild(ball);
-      });
-    }
+  const numbers = Array.from(set).sort((a, b) => a - b);
+  const container = document.getElementById("numbers");
+  container.innerHTML = "";
 
-    // 처음 로딩될 때 자동 생성
-    generateLotto();
-  </script>
+  numbers.forEach((num, index) => {
+    const ball = document.createElement("div");
+    ball.className = "ball";
+    ball.innerText = num;
+    ball.style.backgroundColor = getColor(num);
+    ball.style.animationDelay = `${index * 0.1}s`;
+    container.appendChild(ball);
+  });
+}
+
+generateLotto();
+</script>
 
 </body>
 </html>
