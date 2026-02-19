@@ -1,134 +1,153 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lotto Generator</title>
+
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0e1117">
-<title>Lotto</title>
+<meta name="theme-color" content="#0f172a" />
 
 <style>
-* { box-sizing: border-box; }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
 
 body {
-  margin: 0;
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
-  background: #0e1117;
-  color: #e5e7eb;
+  background: radial-gradient(circle at 20% 20%, #1e293b, #0f172a 70%);
+  color: white;
+  padding: 20px;
+}
+
+.container {
+  text-align: center;
+  max-width: 420px;
+  width: 100%;
 }
 
 h1 {
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 2px;
-  margin-bottom: 40px;
-  color: #6b7280;
+  font-size: 28px;
+  margin-bottom: 30px;
+  font-weight: 600;
+  letter-spacing: -1px;
 }
 
-.ball-container {
+.numbers {
   display: flex;
-  gap: 14px;
-  margin-bottom: 50px;
-  flex-wrap: wrap;
   justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 30px;
 }
 
 .ball {
-  width: 56px;
-  height: 56px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
   display: flex;
-  align-items: center;
   justify-content: center;
-  font-size: 16px;
-  font-weight: 600;
-  color: #111;
-  opacity: 0;
-  transform: translateY(8px);
-  animation: rise 0.35s ease forwards;
-}
-
-@keyframes rise {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  align-items: center;
+  font-weight: bold;
+  font-size: 18px;
+  animation: pop 0.4s ease;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.4);
 }
 
 button {
-  padding: 12px 28px;
-  font-size: 13px;
-  letter-spacing: 1px;
-  border-radius: 999px;
-  border: 1px solid #2d3748;
-  background: transparent;
-  color: #9ca3af;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-button:hover {
-  background: #1f2937;
-  color: #e5e7eb;
+  transition: 0.2s;
 }
 
 button:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
+}
+
+.footer {
+  margin-top: 25px;
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+@keyframes pop {
+  0% { transform: scale(0); opacity: 0; }
+  80% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* 번호 색상 구간 */
+.yellow { background: #facc15; color: #000; }
+.blue { background: #38bdf8; }
+.red { background: #ef4444; }
+.gray { background: #94a3b8; color:#000; }
+.green { background: #22c55e; }
+
+@media (max-width: 400px) {
+  .ball {
+    width: 50px;
+    height: 50px;
+    font-size: 16px;
+  }
 }
 </style>
 </head>
-
 <body>
 
-<h1>LOTTO</h1>
-<div class="ball-container" id="numbers"></div>
-<button onclick="generateLotto()">GENERATE</button>
+<div class="container">
+  <h1>🎯 Lotto Generator</h1>
+  <div class="numbers" id="numbers"></div>
+  <button onclick="generate()">번호 다시 뽑기</button>
+  <div class="footer">45개 번호는 모두 동일 확률</div>
+</div>
 
 <script>
-function getColor(num) {
-  if (num <= 10) return "#facc15";
-  if (num <= 20) return "#60a5fa";
-  if (num <= 30) return "#f87171";
-  if (num <= 40) return "#d1d5db";
-  return "#4ade80";
+function getColorClass(num) {
+  if (num <= 10) return "yellow";
+  if (num <= 20) return "blue";
+  if (num <= 30) return "red";
+  if (num <= 40) return "gray";
+  return "green";
 }
 
-function shuffle(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
+function generate() {
+  const numbers = new Set();
+  while (numbers.size < 6) {
+    numbers.add(Math.floor(Math.random() * 45) + 1);
   }
-  return array;
-}
 
-function generateLotto() {
-  const numbers = Array.from({length: 45}, (_, i) => i + 1);
-  const shuffled = shuffle(numbers);
-  const selected = shuffled.slice(0, 6).sort((a,b) => a-b);
-
+  const sorted = [...numbers].sort((a,b)=>a-b);
   const container = document.getElementById("numbers");
   container.innerHTML = "";
 
-  selected.forEach((num, index) => {
+  sorted.forEach(num => {
     const ball = document.createElement("div");
-    ball.className = "ball";
-    ball.innerText = num;
-    ball.style.backgroundColor = getColor(num);
-    ball.style.animationDelay = `${index * 0.05}s`;
+    ball.className = "ball " + getColorClass(num);
+    ball.textContent = num;
     container.appendChild(ball);
   });
 }
 
-generateLotto();
-</script>
-<script>
+generate();
+
+/* PWA 등록 */
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
 }
 </script>
+
 </body>
 </html>
