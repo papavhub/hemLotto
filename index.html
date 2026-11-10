@@ -3,8 +3,13 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#0f172a"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="hemLotto"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
 <link rel="manifest" href="manifest.json">
-<title>LOTTO GENERATOR</title>
+<title>LOTTO GENERATOR - hemLotto</title>
 
 <style>
 body{
@@ -18,7 +23,7 @@ body{
 
 h1{
   margin-top:60px;
-  font-weight:600;
+  font-weight:700;
   letter-spacing:2px;
 }
 
@@ -62,11 +67,14 @@ input:checked + .slider:before{transform:translateX(34px);}
 
 /* 번호 */
 .numbers{
-  margin-top:60px;
+  margin-top:50px;
+  min-height:90px;
   display:flex;
   justify-content:center;
-  gap:22px;
+  align-items:center;
+  gap:18px;
   flex-wrap:wrap;
+  padding:0 20px;
 }
 .ball{
   width:72px;
@@ -78,6 +86,9 @@ input:checked + .slider:before{transform:translateX(34px);}
   font-size:26px;
   font-weight:700;
   color:white;
+  text-shadow:0 1px 3px rgba(0,0,0,0.4);
+  box-shadow:0 8px 16px -4px rgba(0,0,0,0.35), inset 0 -3px 6px rgba(0,0,0,0.25), inset 0 3px 6px rgba(255,255,255,0.3);
+  transition:transform .3s ease;
 }
 .ball.final{
   animation:pop .35s ease;
@@ -87,9 +98,18 @@ input:checked + .slider:before{transform:translateX(34px);}
   100%{transform:scale(1);}
 }
 
+/* 안내 텍스트 */
+.status-text{
+  margin-top:16px;
+  font-size:14px;
+  color:#94a3b8;
+  min-height:20px;
+  transition:opacity .3s;
+}
+
 /* 버튼 */
 .main-btn{
-  margin-top:60px;
+  margin-top:40px;
   padding:14px 44px;
   border:none;
   border-radius:40px;
@@ -98,7 +118,10 @@ input:checked + .slider:before{transform:translateX(34px);}
   cursor:pointer;
   background:linear-gradient(45deg,#6366f1,#8b5cf6);
   color:white;
+  box-shadow:0 8px 20px -4px rgba(99,102,241,0.5);
+  transition:transform .15s, opacity .2s;
 }
+.main-btn:active{transform:scale(0.97);}
 .main-btn:disabled{opacity:.4;cursor:not-allowed;}
 
 .action-row{
@@ -110,27 +133,35 @@ input:checked + .slider:before{transform:translateX(34px);}
 }
 
 .action-row button{
-  padding:10px 18px;
+  padding:10px 20px;
   border:none;
   border-radius:20px;
   font-size:14px;
+  font-weight:500;
   cursor:pointer;
   background:#334155;
   color:white;
+  box-shadow:0 4px 10px rgba(0,0,0,0.2);
+  transition:background .2s, transform .1s;
 }
+.action-row button:active{transform:scale(0.96);}
+.action-row button:hover{background:#475569;}
 
 .install-btn{
-  margin-top:20px;
+  margin-top:24px;
   background:#111827;
   padding:10px 22px;
   border-radius:30px;
   font-size:14px;
   border:1px solid #374151;
+  color:#94a3b8;
   cursor:pointer;
 }
 
 @media(max-width:480px){
-  .ball{width:60px;height:60px;font-size:22px;}
+  .ball{width:56px;height:56px;font-size:21px;}
+  .numbers{gap:10px;}
+  h1{margin-top:40px;font-size:26px;}
 }
 </style>
 </head>
@@ -141,26 +172,28 @@ input:checked + .slider:before{transform:translateX(34px);}
 <div class="toggle-wrap">
   <span>하나씩 보기</span>
   <label class="switch">
-    <input type="checkbox" id="modeToggle">
+    <input type="checkbox" id="modeToggle" aria-label="추첨 모드 선택">
     <span class="slider"></span>
   </label>
   <span>한번에 보기</span>
 </div>
 
 <div class="numbers" id="numbers"></div>
+<div class="status-text" id="statusText"></div>
 
 <button class="main-btn" id="generateBtn">번호 생성</button>
 
 <div class="action-row" id="actionRow">
-  <button onclick="copyNumbers()">번호 복사</button>
-  <button onclick="shareNumbers()">공유</button>
-  <button onclick="saveImage()">사진 저장</button>
+  <button onclick="copyNumbers()">📋 번호 복사</button>
+  <button onclick="shareNumbers()">📤 공유</button>
+  <button onclick="saveImage()">🖼️ 사진 저장</button>
 </div>
 
-<button class="install-btn">앱 설치</button>
+<button class="install-btn">📲 앱 설치</button>
 
 <script>
 const numbersContainer=document.getElementById("numbers");
+const statusText=document.getElementById("statusText");
 const generateBtn=document.getElementById("generateBtn");
 const modeToggle=document.getElementById("modeToggle");
 const actionRow=document.getElementById("actionRow");
@@ -168,11 +201,11 @@ const actionRow=document.getElementById("actionRow");
 let currentNumbers=[];
 
 function getColor(num){
-  if(num<=10) return "#facc15";
-  if(num<=20) return "#3b82f6";
-  if(num<=30) return "#ef4444";
-  if(num<=40) return "#22c55e";
-  return "#a855f7";
+  if(num<=10) return "#eab308"; /* 골든 옐로우 (화이트 텍스트 가독성 최적화) */
+  if(num<=20) return "#3b82f6"; /* 파랑 */
+  if(num<=30) return "#ef4444"; /* 빨강 */
+  if(num<=40) return "#10b981"; /* 초록 */
+  return "#a855f7";             /* 보라 */
 }
 
 function generateNumbers(){
@@ -183,10 +216,10 @@ function generateNumbers(){
   return [...set];
 }
 
-function spinBall(ball, finalNumber, duration=1200){
+function spinBall(ball, finalNumber, duration=1000){
   return new Promise(resolve=>{
     let elapsed=0;
-    const interval=60;
+    const interval=50;
 
     const spin=setInterval(()=>{
       const randomNum=Math.floor(Math.random()*45)+1;
@@ -205,16 +238,40 @@ function spinBall(ball, finalNumber, duration=1200){
   });
 }
 
-async function sequentialMode(sorted){
+/* 하나씩 보기 모드: 랜덤 순서로 두근두근 추첨 후, 6개 번호 정렬 */
+async function sequentialMode(rawNumbers, sortedNumbers){
+  const balls=[];
   for(let i=0;i<6;i++){
+    statusText.textContent=`${i+1}번째 행운의 번호 추첨 중... 🎱`;
     const ball=document.createElement("div");
     ball.className="ball";
     numbersContainer.appendChild(ball);
-    await spinBall(ball,sorted[i],1000);
+    balls.push(ball);
+    await spinBall(ball, rawNumbers[i], 800);
   }
+
+  statusText.textContent="번호 정렬 중... ✨";
+  await new Promise(r=>setTimeout(r, 600));
+
+  /* 추첨 완료 후 오름차순으로 부드럽게 재배치 */
+  const ballMap=new Map();
+  balls.forEach(b=>ballMap.set(Number(b.textContent), b));
+  sortedNumbers.forEach(num=>{
+    const b=ballMap.get(num);
+    if(b){
+      b.classList.remove("final");
+      void b.offsetWidth; /* reflow 트리거 */
+      b.classList.add("final");
+      numbersContainer.appendChild(b);
+    }
+  });
+
+  statusText.textContent="🎉 이번 주 행운의 번호가 완성되었습니다!";
 }
 
-async function allAtOnceMode(sorted){
+/* 한번에 보기 모드: 6개 공 동시 추첨 */
+async function allAtOnceMode(sortedNumbers){
+  statusText.textContent="행운의 번호 동시 추첨 중... 🎰";
   const balls=[];
   for(let i=0;i<6;i++){
     const ball=document.createElement("div");
@@ -223,73 +280,169 @@ async function allAtOnceMode(sorted){
     balls.push(ball);
   }
   await Promise.all(
-    balls.map((ball,i)=>spinBall(ball,sorted[i],1200))
+    balls.map((ball,i)=>spinBall(ball,sortedNumbers[i],1200))
   );
+  statusText.textContent="🎉 이번 주 행운의 번호가 완성되었습니다!";
 }
 
 generateBtn.addEventListener("click", async()=>{
   generateBtn.disabled=true;
   actionRow.style.display="none";
   numbersContainer.innerHTML="";
+  statusText.textContent="";
 
-  const numbers=generateNumbers();
-  const sorted=[...numbers].sort((a,b)=>a-b);
-  currentNumbers=sorted;
+  const rawNumbers=generateNumbers();
+  const sortedNumbers=[...rawNumbers].sort((a,b)=>a-b);
+  currentNumbers=sortedNumbers;
 
   if(modeToggle.checked){
-    await allAtOnceMode(sorted);
+    await allAtOnceMode(sortedNumbers);
   }else{
-    await sequentialMode(sorted);
+    await sequentialMode(rawNumbers, sortedNumbers);
   }
 
   actionRow.style.display="flex";
   generateBtn.disabled=false;
 });
 
-/* 복사 */
-function copyNumbers(){
-  navigator.clipboard.writeText(currentNumbers.join(", "));
-  alert("복사 완료!");
+function getShareText(){
+  return `[hemLotto] 이번 주 행운의 로또 번호 🎰\n${currentNumbers.join(", ")}\n대박을 기원합니다! ✨`;
 }
 
-/* 공유 */
-function shareNumbers(){
-  if(navigator.share){
-    navigator.share({
-      title:"로또 번호",
-      text:currentNumbers.join(", ")
+function fallbackCopy(text){
+  const ta=document.createElement("textarea");
+  ta.value=text;
+  ta.style.position="fixed";
+  ta.style.opacity="0";
+  document.body.appendChild(ta);
+  ta.select();
+  try{
+    document.execCommand("copy");
+    alert("행운의 로또 번호가 복사되었습니다! 🍀");
+  }catch(err){
+    alert("복사에 실패했습니다. 번호: "+currentNumbers.join(", "));
+  }
+  document.body.removeChild(ta);
+}
+
+/* 복사 */
+function copyNumbers(){
+  const text=getShareText();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>{
+      alert("행운의 로또 번호가 복사되었습니다! 🍀");
+    }).catch(()=>{
+      fallbackCopy(text);
     });
   }else{
-    alert("이 브라우저는 공유를 지원하지 않습니다.");
+    fallbackCopy(text);
   }
 }
 
-/* 이미지 저장 (숫자 6개만) */
+/* 공유 */
+async function shareNumbers(){
+  const text=getShareText();
+  if(navigator.share){
+    try{
+      await navigator.share({
+        title:"hemLotto 행운의 로또 번호",
+        text:text
+      });
+    }catch(err){
+      if(err.name!=="AbortError"){
+        copyNumbers();
+      }
+    }
+  }else{
+    copyNumbers();
+  }
+}
+
+/* 이미지 저장 (예쁜 티켓형 카드 렌더링) */
 function saveImage(){
   const canvas=document.createElement("canvas");
-  canvas.width=600;
-  canvas.height=200;
+  canvas.width=640;
+  canvas.height=260;
   const ctx=canvas.getContext("2d");
 
-  ctx.fillStyle="#0f172a";
-  ctx.fillRect(0,0,600,200);
+  /* 배경 그라데이션 */
+  const bgGrad=ctx.createLinearGradient(0,0,640,260);
+  bgGrad.addColorStop(0,"#1e293b");
+  bgGrad.addColorStop(1,"#0f172a");
+  ctx.fillStyle=bgGrad;
+  ctx.fillRect(0,0,640,260);
+
+  /* 테두리 */
+  ctx.strokeStyle="#334155";
+  ctx.lineWidth=2;
+  ctx.strokeRect(10,10,620,240);
+
+  /* 헤더 타이틀 */
+  ctx.fillStyle="#f8fafc";
+  ctx.font="bold 20px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+  ctx.fillText("hemLotto 🎰 행운의 추천 번호", 320, 48);
+
+  /* 날짜 */
+  const today=new Date();
+  const dateStr=`${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')}`;
+  ctx.fillStyle="#94a3b8";
+  ctx.font="13px sans-serif";
+  ctx.fillText(`발급일: ${dateStr}`, 320, 78);
+
+  /* 번호 공 6개 */
+  const startX=95;
+  const gap=90;
+  const ballY=145;
+  const ballR=34;
 
   currentNumbers.forEach((num,i)=>{
+    const bx=startX+i*gap;
+    /* 볼 본체 */
     ctx.beginPath();
-    ctx.arc(80+i*90,100,35,0,Math.PI*2);
+    ctx.arc(bx,ballY,ballR,0,Math.PI*2);
     ctx.fillStyle=getColor(num);
     ctx.fill();
+
+    /* 하이라이트 효과 */
+    ctx.beginPath();
+    ctx.arc(bx-10,ballY-10,12,0,Math.PI*2);
+    ctx.fillStyle="rgba(255,255,255,0.25)";
+    ctx.fill();
+
+    /* 숫자 */
     ctx.fillStyle="white";
-    ctx.font="20px sans-serif";
+    ctx.font="bold 24px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
     ctx.textAlign="center";
     ctx.textBaseline="middle";
-    ctx.fillText(num,80+i*90,100);
+    ctx.fillText(num,bx,ballY+1);
   });
 
-  const link=document.createElement("a");
-  link.download="lotto.png";
-  link.href=canvas.toDataURL();
-  link.click();
+  /* 하단 푸터 */
+  ctx.fillStyle="#a5b4fc";
+  ctx.font="14px sans-serif";
+  ctx.textAlign="center";
+  ctx.fillText("✨ 1등 당첨을 진심으로 응원합니다! ✨", 320, 222);
+
+  /* 다운로드 트리거 */
+  if(canvas.toBlob){
+    canvas.toBlob((blob)=>{
+      const url=URL.createObjectURL(blob);
+      const link=document.createElement("a");
+      link.download=`hemLotto_${dateStr.replace(/\./g,'-')}.png`;
+      link.href=url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    });
+  }else{
+    const link=document.createElement("a");
+    link.download="lotto.png";
+    link.href=canvas.toDataURL();
+    link.click();
+  }
 }
 
 let deferredPrompt;
@@ -303,38 +456,35 @@ window.addEventListener("beforeinstallprompt", (e) => {
 
 /* 버튼 클릭 */
 installBtn.addEventListener("click", async () => {
-
   const ua = navigator.userAgent.toLowerCase();
 
-  // 📱 iPhone 처리
+  /* 📱 iPhone 처리 */
   if (ua.includes("iphone") || ua.includes("ipad")) {
-    alert("📲 아이폰은 Safari에서 공유 버튼 → '홈 화면에 추가'를 선택하세요.");
+    alert("📲 아이폰은 Safari 하단 공유 버튼(네모+화살표) → '홈 화면에 추가'를 누르시면 앱처럼 설치됩니다!");
     return;
   }
 
-  // 🤖 안드로이드
+  /* 🤖 안드로이드 */
   if (deferredPrompt) {
     deferredPrompt.prompt();
     const choiceResult = await deferredPrompt.userChoice;
-
     if (choiceResult.outcome === "accepted") {
       console.log("사용자가 설치를 수락했습니다");
     }
-
     deferredPrompt = null;
   } else {
-    alert("이미 설치되었거나 설치를 지원하지 않는 환경입니다.");
+    alert("이미 설치되었거나 홈 화면에 추가를 지원하지 않는 브라우저입니다.");
   }
 });
 
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("service-worker.js")
-        .then(() => console.log("Service Worker 등록 완료"))
-        .catch(err => console.log("Service Worker 등록 실패:", err));
-    });
-  }
-
+/* 서비스 워커 등록 */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("service-worker.js")
+      .then(() => console.log("Service Worker 등록 완료"))
+      .catch(err => console.log("Service Worker 등록 실패:", err));
+  });
+}
 </script>
 
 </body>
