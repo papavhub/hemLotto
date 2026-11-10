@@ -1,10 +1,12 @@
 {
-  "name": "Lotto Generator",
-  "short_name": "Lotto",
+  "name": "hemLotto - 행운의 로또 번호 생성기",
+  "short_name": "hemLotto",
+  "id": "./",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
+  "description": "긴장감 넘치는 추첨과 함께하는 행운의 로또 번호 생성기",
   "icons": [
     {
       "src": "icon-192.png",
